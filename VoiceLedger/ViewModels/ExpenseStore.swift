@@ -48,6 +48,12 @@ final class ExpenseStore: ObservableObject {
         }
     }
 
+    func monthlyEntries(for month: Date, categoryName: String) -> [ExpenseEntry] {
+        entries(for: month)
+            .filter { $0.categoryName == categoryName }
+            .sorted { $0.createdAt > $1.createdAt }
+    }
+
     func updateEntry(id: UUID, detail: String, amount: Decimal) {
         guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
         entries[index].detail = detail

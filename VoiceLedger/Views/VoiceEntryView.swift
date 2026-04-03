@@ -10,6 +10,8 @@ struct VoiceEntryView: View {
     @State private var isBusy = false
     @State private var editableDetail = ""
     @State private var editableAmount = ""
+    @State private var selectedExpenseDate = Date()
+    @State private var isPressingRecord = false
 
     var body: some View {
         NavigationStack {
@@ -34,9 +36,21 @@ struct VoiceEntryView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("支持大类")
                 .font(.headline)
-            Text(categoryStore.displayNames())
-                .font(.body)
-                .foregroundStyle(.secondary)
+            ForEach(categoryStore.categories) { category in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(category.name)
+                        .font(.body.weight(.semibold))
+                    Text("别名：\(category.aliases.joined(separator: "、"))")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            DatePicker(
+                "消费时间",
+                selection: $selectedExpenseDate,
+                displayedComponents: [.date, .hourAndMinute]
+            )
+            .datePickerStyle(.compact)
             if let error = speechService.authorizationError {
                 Text(error)
                     .font(.footnote)
@@ -51,35 +65,17 @@ struct VoiceEntryView: View {
 
     private var actionCard: some View {
         VStack(spacing: 16) {
-            Button {
-                toggleRecording()
-            } label: {
-                Label(
-                    speechService.isRecording ? "停止录音" : "开始录音",
-                    systemImage: speechService.isRecording ? "stop.circle.fill" : "mic.circle.fill"
-                )
-                .font(.title3.bold())
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(speechService.isRecording ? .red : .orange)
+            recordButton
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("识别结果")
                     .font(.subheadline.weight(.semibold))
-                Text(speechService.transcript.isEmpty ? "点击开始录音后，说一句完整的话，例如：餐饮 午饭 35元" : speechService.transcript)
+                Text(speechService.transcript.isEmpty ? "按住“记录”并说一句完整的话，例如：餐饮 午饭 35元" : speechService.transcript)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .background(Color(.secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-
-            Button("识别内容") {
-                parseTranscript()
-            }
-            .buttonStyle(.bordered)
-            .disabled(speechService.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isBusy)
 
             if parseResult != nil {
                 Button("保存当前记录") {
@@ -93,6 +89,30 @@ struct VoiceEntryView: View {
         .padding()
         .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var recordButton: some View {
+        Label(
+            isPressingRecord || speechService.isRecording ? "松开后识别" : "按住记录",
+            systemImage: isPressingRecord || speechService.isRecording ? "waveform.circle.fill" : "mic.circle.fill"
+        )
+        .font(.title3.bold())
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .foregroundStyle(.white)
+        .background(isPressingRecord || speechService.isRecording ? Color.red : Color.orange)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .scaleEffect(isPressingRecord || speechService.isRecording ? 0.98 : 1)
+        .animation(.easeInOut(duration: 0.15), value: isPressingRecord || speechService.isRecording)
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    beginPressRecordingIfNeeded()
+                }
+                .onEnded { _ in
+                    endPressRecording()
+                }
+        )
     }
 
     private var resultCard: some View {
@@ -137,10 +157,6 @@ struct VoiceEntryView: View {
             Text("推荐说法")
                 .font(.headline)
             Text("餐饮 午饭 35元")
-            Text("交通 打车 18块")
-            Text("购物 超市 126元")
-            Text("娱乐 电影票 49元")
-            Text("看病 买药 28元")
             Text("识别后你还可以手工修改子项目和金额，再保存。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -151,12 +167,9 @@ struct VoiceEntryView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    private func toggleRecording() {
-        if speechService.isRecording {
-            speechService.stopRecording()
-            return
-        }
-
+    private func beginPressRecordingIfNeeded() {
+        guard !isPressingRecord, !speechService.isRecording else { return }
+        isPressingRecord = true
         do {
             try speechService.startRecording()
             parseResult = nil
@@ -164,7 +177,19 @@ struct VoiceEntryView: View {
             editableDetail = ""
             editableAmount = ""
         } catch {
+            isPressingRecord = false
             parseError = error.localizedDescription
+        }
+    }
+
+    private func endPressRecording() {
+        guard isPressingRecord || speechService.isRecording else { return }
+        isPressingRecord = false
+        speechService.stopRecording()
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
+            parseTranscript()
         }
     }
 
@@ -199,7 +224,7 @@ struct VoiceEntryView: View {
         result.detail = trimmedDetail
         result.amount = amount
         parseResult = result
-        store.add(result.entry)
+        store.add(result.entry(createdAt: selectedExpenseDate))
         parseError = nil
         speechService.transcript = ""
         editableDetail = ""

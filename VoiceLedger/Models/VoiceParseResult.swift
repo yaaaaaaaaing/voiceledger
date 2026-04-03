@@ -6,7 +6,7 @@ struct VoiceParseResult {
     var amount: Decimal
     let originalText: String
 
-    var entry: ExpenseEntry {
-        ExpenseEntry(categoryName: category.name, detail: detail, amount: amount)
+    func entry(createdAt: Date) -> ExpenseEntry {
+        ExpenseEntry(categoryName: category.name, detail: detail, amount: amount, createdAt: createdAt)
     }
 }

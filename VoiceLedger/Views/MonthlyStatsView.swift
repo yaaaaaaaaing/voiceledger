@@ -3,6 +3,7 @@ import SwiftUI
 struct MonthlyStatsView: View {
     @EnvironmentObject private var store: ExpenseStore
     @State private var selectedMonth = Date()
+    @State private var expandedCategories: Set<String> = []
 
     var body: some View {
         NavigationStack {
@@ -18,17 +19,54 @@ struct MonthlyStatsView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(store.monthlySummary(for: selectedMonth), id: \.category) { item in
-                            HStack {
-                                Text(item.category)
-                                Spacer()
-                                Text(CurrencyFormatter.string(from: item.total))
-                            }
+                            DisclosureGroup(
+                                isExpanded: binding(for: item.category),
+                                content: {
+                                    let entries = store.monthlyEntries(for: selectedMonth, categoryName: item.category)
+                                    ForEach(entries) { entry in
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            HStack {
+                                                Text(entry.detail)
+                                                    .font(.subheadline.weight(.semibold))
+                                                Spacer()
+                                                Text(CurrencyFormatter.string(from: entry.amount))
+                                                    .font(.subheadline)
+                                            }
+                                            Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .padding(.vertical, 4)
+                                    }
+                                },
+                                label: {
+                                    HStack {
+                                        Text(item.category)
+                                        Spacer()
+                                        Text(CurrencyFormatter.string(from: item.total))
+                                    }
+                                }
+                            )
+                            .animation(.easeInOut(duration: 0.2), value: expandedCategories)
                         }
                     }
                 }
             }
             .navigationTitle("月统计")
         }
+    }
+
+    private func binding(for category: String) -> Binding<Bool> {
+        Binding(
+            get: { expandedCategories.contains(category) },
+            set: { isExpanded in
+                if isExpanded {
+                    expandedCategories.insert(category)
+                } else {
+                    expandedCategories.remove(category)
+                }
+            }
+        )
     }
 
     private var monthPicker: some View {
