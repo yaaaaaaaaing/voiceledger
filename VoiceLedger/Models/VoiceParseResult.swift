@@ -2,11 +2,11 @@ import Foundation
 
 struct VoiceParseResult {
     let category: ExpenseCategory
-    let detail: String
-    let amount: Decimal
+    var detail: String
+    var amount: Decimal
     let originalText: String
 
     var entry: ExpenseEntry {
-        ExpenseEntry(category: category, detail: detail, amount: amount)
+        ExpenseEntry(categoryName: category.name, detail: detail, amount: amount)
     }
 }

@@ -22,6 +22,10 @@
 		A0000000000000000000002C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001D /* Assets.xcassets */; };
 		A0000000000000000000002D /* Preview Content/Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001E /* Preview Content/Preview Assets.xcassets */; };
 		A00000000000000000000034 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000035 /* CurrencyFormatter.swift */; };
+		A00000000000000000000036 /* CategoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000037 /* CategoryStore.swift */; };
+		A00000000000000000000038 /* CategoryManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000039 /* CategoryManagementView.swift */; };
+		A0000000000000000000003A /* CategoryEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000003B /* CategoryEditorSheet.swift */; };
+		A0000000000000000000003C /* EntryEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000003D /* EntryEditView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +46,10 @@
 		A0000000000000000000001D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A0000000000000000000001E /* Preview Content/Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Content/Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A00000000000000000000035 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
+		A00000000000000000000037 /* CategoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryStore.swift; sourceTree = "<group>"; };
+		A00000000000000000000039 /* CategoryManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryManagementView.swift; sourceTree = "<group>"; };
+		A0000000000000000000003B /* CategoryEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEditorSheet.swift; sourceTree = "<group>"; };
+		A0000000000000000000003D /* EntryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +108,7 @@
 		A00000000000000000000007 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				A00000000000000000000037 /* CategoryStore.swift */,
 				A00000000000000000000018 /* ExpenseStore.swift */,
 			);
 			path = ViewModels;
@@ -108,6 +117,9 @@
 		A00000000000000000000008 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				A00000000000000000000039 /* CategoryManagementView.swift */,
+				A0000000000000000000003B /* CategoryEditorSheet.swift */,
+				A0000000000000000000003D /* EntryEditView.swift */,
 				A00000000000000000000019 /* VoiceEntryView.swift */,
 				A0000000000000000000001A /* MonthlyStatsView.swift */,
 				A0000000000000000000001B /* HistoryView.swift */,
@@ -213,7 +225,11 @@
 				A00000000000000000000025 /* ChineseNumberParser.swift in Sources */,
 				A00000000000000000000026 /* ExpenseParser.swift in Sources */,
 				A00000000000000000000027 /* SpeechRecognizerService.swift in Sources */,
+				A00000000000000000000036 /* CategoryStore.swift in Sources */,
 				A00000000000000000000028 /* ExpenseStore.swift in Sources */,
+				A00000000000000000000038 /* CategoryManagementView.swift in Sources */,
+				A0000000000000000000003A /* CategoryEditorSheet.swift in Sources */,
+				A0000000000000000000003C /* EntryEditView.swift in Sources */,
 				A00000000000000000000029 /* VoiceEntryView.swift in Sources */,
 				A0000000000000000000002A /* MonthlyStatsView.swift in Sources */,
 				A0000000000000000000002B /* HistoryView.swift in Sources */,
@@ -227,6 +243,7 @@
 		A00000000000000000000030 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MNFNPR48QJ;
@@ -251,6 +268,7 @@
 		A00000000000000000000031 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MNFNPR48QJ;

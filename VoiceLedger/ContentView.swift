@@ -17,6 +17,11 @@ struct ContentView: View {
                 .tabItem {
                     Label("历史记录", systemImage: "clock.fill")
                 }
+
+            CategoryManagementView()
+                .tabItem {
+                    Label("分类管理", systemImage: "square.and.pencil")
+                }
         }
         .tint(.orange)
     }

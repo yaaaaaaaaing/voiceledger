@@ -19,7 +19,7 @@ struct MonthlyStatsView: View {
                     } else {
                         ForEach(store.monthlySummary(for: selectedMonth), id: \.category) { item in
                             HStack {
-                                Text(item.category.rawValue)
+                                Text(item.category)
                                 Spacer()
                                 Text(CurrencyFormatter.string(from: item.total))
                             }

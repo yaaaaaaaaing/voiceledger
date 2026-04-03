@@ -21,9 +21,9 @@ enum ExpenseParser {
     private static let amountPattern = #"\d+(?:\.\d{1,2})?"#
     private static let chineseAmountPattern = #"[零一二两三四五六七八九十百千万点块元毛角]+(?:块钱|块|元|毛|角)?"#
 
-    static func parse(text: String) throws -> VoiceParseResult {
+    static func parse(text: String, categories: [ExpenseCategory]) throws -> VoiceParseResult {
         let normalized = normalize(text)
-        guard let categoryMatch = findCategory(in: normalized) else {
+        guard let categoryMatch = findCategory(in: normalized, categories: categories) else {
             throw ExpenseParserError.unsupportedCategory
         }
 
@@ -62,9 +62,9 @@ enum ExpenseParser {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private static func findCategory(in text: String) -> (category: ExpenseCategory, alias: String, amountSnippet: String?)? {
-        for category in ExpenseCategory.allCases {
-            for alias in category.aliases.sorted(by: { $0.count > $1.count }) where text.contains(alias) {
+    private static func findCategory(in text: String, categories: [ExpenseCategory]) -> (category: ExpenseCategory, alias: String, amountSnippet: String?)? {
+        for category in categories {
+            for alias in category.keywords where text.contains(alias) {
                 return (category, alias, nil)
             }
         }
@@ -93,7 +93,7 @@ enum ExpenseParser {
     ) -> String {
         var content = text
         let removableWords = Set(
-            category.aliases
+            category.keywords
             + ["花了", "消费", "用了", "支出", "今天", "刚刚", "买了", "付款", "元", "块", "块钱"]
         )
 
@@ -126,17 +126,19 @@ enum ExpenseParser {
     }
 
     private static func defaultDetail(for category: ExpenseCategory) -> String {
-        switch category {
-        case .dining:
+        switch category.name {
+        case "餐饮":
             return "日常餐饮"
-        case .transport:
+        case "交通":
             return "日常交通"
-        case .shopping:
+        case "购物":
             return "日常购物"
-        case .entertainment:
+        case "娱乐":
             return "休闲娱乐"
-        case .medical:
+        case "看病":
             return "医疗支出"
+        default:
+            return "\(category.name)支出"
         }
     }
 }

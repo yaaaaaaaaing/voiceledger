@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HistoryView: View {
     @EnvironmentObject private var store: ExpenseStore
+    @State private var editingEntry: ExpenseEntry?
 
     var body: some View {
         NavigationStack {
@@ -13,7 +14,7 @@ struct HistoryView: View {
                     ForEach(store.entries) { entry in
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
-                                Text(entry.category.rawValue)
+                                Text(entry.categoryName)
                                     .font(.headline)
                                 Spacer()
                                 Text(CurrencyFormatter.string(from: entry.amount))
@@ -26,6 +27,10 @@ struct HistoryView: View {
                                 .foregroundStyle(.tertiary)
                         }
                         .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            editingEntry = entry
+                        }
                     }
                     .onDelete(perform: store.delete)
                 }
@@ -33,6 +38,9 @@ struct HistoryView: View {
             .navigationTitle("历史记录")
             .toolbar {
                 EditButton()
+            }
+            .sheet(item: $editingEntry) { entry in
+                EntryEditView(entry: entry)
             }
         }
     }

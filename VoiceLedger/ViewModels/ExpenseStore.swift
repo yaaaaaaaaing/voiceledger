@@ -39,13 +39,20 @@ final class ExpenseStore: ObservableObject {
         entries(for: month).reduce(0) { $0 + $1.amount }
     }
 
-    func monthlySummary(for month: Date) -> [(category: ExpenseCategory, total: Decimal)] {
-        let grouped = Dictionary(grouping: entries(for: month), by: \.category)
-        return ExpenseCategory.allCases.compactMap { category in
+    func monthlySummary(for month: Date) -> [(category: String, total: Decimal)] {
+        let grouped = Dictionary(grouping: entries(for: month), by: \.categoryName)
+        return grouped.keys.sorted().compactMap { category in
             let total = grouped[category, default: []].reduce(0) { $0 + $1.amount }
             guard total > 0 else { return nil }
             return (category, total)
         }
+    }
+
+    func updateEntry(id: UUID, detail: String, amount: Decimal) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        entries[index].detail = detail
+        entries[index].amount = amount
+        save()
     }
 
     private func load() {

@@ -2,11 +2,14 @@ import SwiftUI
 
 struct VoiceEntryView: View {
     @EnvironmentObject private var store: ExpenseStore
+    @EnvironmentObject private var categoryStore: CategoryStore
     @StateObject private var speechService = SpeechRecognizerService()
 
     @State private var parseResult: VoiceParseResult?
     @State private var parseError: String?
     @State private var isBusy = false
+    @State private var editableDetail = ""
+    @State private var editableAmount = ""
 
     var body: some View {
         NavigationStack {
@@ -31,7 +34,7 @@ struct VoiceEntryView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("支持大类")
                 .font(.headline)
-            Text(ExpenseCategory.allCases.map(\.rawValue).joined(separator: " / "))
+            Text(categoryStore.displayNames())
                 .font(.body)
                 .foregroundStyle(.secondary)
             if let error = speechService.authorizationError {
@@ -72,11 +75,19 @@ struct VoiceEntryView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
 
-            Button("识别并保存") {
-                saveFromTranscript()
+            Button("识别内容") {
+                parseTranscript()
             }
             .buttonStyle(.bordered)
             .disabled(speechService.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isBusy)
+
+            if parseResult != nil {
+                Button("保存当前记录") {
+                    saveParsedEntry()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
@@ -90,9 +101,23 @@ struct VoiceEntryView: View {
                 .font(.headline)
 
             if let parseResult {
-                LabeledContent("大类", value: parseResult.category.rawValue)
-                LabeledContent("子信息", value: parseResult.detail)
-                LabeledContent("金额", value: CurrencyFormatter.string(from: parseResult.amount))
+                LabeledContent("大类", value: parseResult.category.name)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("子信息")
+                        .font(.subheadline.weight(.semibold))
+                    TextField("例如：午饭", text: $editableDetail)
+                        .textFieldStyle(.roundedBorder)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("金额")
+                        .font(.subheadline.weight(.semibold))
+                    TextField("例如：35.5", text: $editableAmount)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                    Text("识别金额：\(CurrencyFormatter.string(from: parseResult.amount))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             } else if let parseError {
                 Text(parseError)
                     .foregroundStyle(.red)
@@ -116,6 +141,9 @@ struct VoiceEntryView: View {
             Text("购物 超市 126元")
             Text("娱乐 电影票 49元")
             Text("看病 买药 28元")
+            Text("识别后你还可以手工修改子项目和金额，再保存。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
@@ -133,24 +161,53 @@ struct VoiceEntryView: View {
             try speechService.startRecording()
             parseResult = nil
             parseError = nil
+            editableDetail = ""
+            editableAmount = ""
         } catch {
             parseError = error.localizedDescription
         }
     }
 
-    private func saveFromTranscript() {
+    private func parseTranscript() {
         isBusy = true
         defer { isBusy = false }
 
         do {
-            let result = try ExpenseParser.parse(text: speechService.transcript)
+            let result = try ExpenseParser.parse(text: speechService.transcript, categories: categoryStore.categories)
             parseResult = result
             parseError = nil
-            store.add(result.entry)
-            speechService.transcript = ""
+            editableDetail = result.detail
+            editableAmount = decimalText(from: result.amount)
         } catch {
             parseResult = nil
             parseError = error.localizedDescription
         }
+    }
+
+    private func saveParsedEntry() {
+        guard var result = parseResult else { return }
+        let trimmedDetail = editableDetail.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedDetail.isEmpty else {
+            parseError = "子项目不能为空。"
+            return
+        }
+        guard let amount = Decimal(string: editableAmount.trimmingCharacters(in: .whitespacesAndNewlines)), amount > 0 else {
+            parseError = "请输入正确金额，例如 35 或 35.5。"
+            return
+        }
+
+        result.detail = trimmedDetail
+        result.amount = amount
+        parseResult = result
+        store.add(result.entry)
+        parseError = nil
+        speechService.transcript = ""
+        editableDetail = ""
+        editableAmount = ""
+        parseResult = nil
+    }
+
+    private func decimalText(from amount: Decimal) -> String {
+        NSDecimalNumber(decimal: amount).stringValue
     }
 }
